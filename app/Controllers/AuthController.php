@@ -42,8 +42,15 @@ class AuthController extends ResourceController
     
     public function logout()
     {
-        $session = session();
-        $session->destroy(); // ✅ Destroy session
+         // If you want logout to invalidate the token:
+        $auth = $this->request->getHeaderLine('Authorization');
+        $token = '';
+        if (preg_match('/Bearer\s(\S+)/', $auth, $m)) $token = $m[1];
+
+        if ($token) {
+            $model = new EmployeeModel();
+            $model->where('api_token', $token)->set(['api_token' => null, 'api_token_created_at' => null])->update();
+        }
 
         return $this->respond([
             'status' => 200,
