@@ -57,6 +57,7 @@ class BookingController extends BaseApiController
             ent.username as enteredby,
             cin.username as checkedinby,
             cout.username as checkedoutby,
+            can.username as cancelledby,
             {$primaryGuestSub} AS primary_guest_name,
             {$primaryCountrySub} AS primary_guest_country,
             {$extraGuestsSub} AS extra_guest_names
@@ -72,6 +73,7 @@ class BookingController extends BaseApiController
         $builder->join('employees ent', 'ent.id = b.created_by', 'left');
         $builder->join('employees cin', 'cin.id = b.checked_in_by', 'left');
         $builder->join('employees cout', 'cout.id = b.checked_out_by', 'left');
+        $builder->join('employees can', 'can.id = b.cancelled_by', 'left');
         
         
             // ---- Search ----
@@ -410,6 +412,78 @@ protected function sendBookingCreatedEmail(int $bookingId): bool
         }
 
         return $this->respond(['status' => 'success']);
+    }
+
+
+    public function cancel($id = null)
+    {
+        $booking = $this->model->find($id);
+        if (! $booking) {
+            return $this->failNotFound('Booking not found');
+        }
+
+        $data = $this->request->getJSON(true) ?? [];
+        $cancelReason = trim((string) ($data['cancel_reason'] ?? ''));
+        if ($cancelReason === '') {
+            return $this->failValidationError('cancel_reason is required');
+        }
+
+        if (($booking['status'] ?? '') === 'cancelled') {
+            return $this->respond([
+                'status' => 'success',
+                'message' => 'Booking already cancelled',
+                'data' => [
+                    'id' => (int) $id,
+                    'cancel_reason' => $booking['cancel_reason'] ?? null,
+                    'cancelled_at' => $booking['cancelled_at'] ?? null,
+                    'cancelled_by' => isset($booking['cancelled_by']) ? (int) $booking['cancelled_by'] : null,
+                ],
+            ]);
+        }
+
+        $cancelledBy = $this->getAuthenticatedEmployeeId();
+        if ($cancelledBy === null && isset($data['cancelled_by']) && is_numeric($data['cancelled_by'])) {
+            $cancelledBy = (int) $data['cancelled_by'];
+        }
+
+        $updateData = [
+            'status' => 'cancelled',
+            'cancel_reason' => $cancelReason,
+            'cancelled_at' => date('Y-m-d H:i:s'),
+            'cancelled_by' => $cancelledBy,
+        ];
+
+        if (! $this->model->update($id, $updateData)) {
+            return $this->failServerError('Unable to cancel booking');
+        }
+
+        return $this->respond([
+            'status' => 'success',
+            'message' => 'Booking cancelled successfully',
+            'data' => array_merge(['id' => (int) $id], $updateData),
+        ]);
+    }
+
+    protected function getAuthenticatedEmployeeId(): ?int
+    {
+        $auth = $this->request->getHeaderLine('Authorization');
+        if (! preg_match('/Bearer\s+(\S+)/', $auth, $matches)) {
+            return null;
+        }
+
+        $token = trim((string) ($matches[1] ?? ''));
+        if ($token === '') {
+            return null;
+        }
+
+        $db = \Config\Database::connect();
+        $employee = $db->table('employees')
+            ->select('id')
+            ->where('api_token', $token)
+            ->get()
+            ->getRowArray();
+
+        return $employee ? (int) $employee['id'] : null;
     }
 
 
