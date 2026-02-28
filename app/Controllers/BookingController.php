@@ -55,6 +55,7 @@ class BookingController extends ResourceController
             room_inventory.room_number,
             bkd.username as bookedby,
             ent.username as enteredby,
+            can.username as cancelledby,
             {$primaryGuestSub} AS primary_guest_name,
             {$primaryCountrySub} AS primary_guest_country,
             {$extraGuestsSub} AS extra_guest_names
@@ -68,6 +69,7 @@ class BookingController extends ResourceController
         
         $builder->join('employees bkd', 'bkd.id = b.booked_by', 'left');
         $builder->join('employees ent', 'ent.id = b.created_by', 'left');
+        $builder->join('employees can', 'can.id = b.cancelled_by', 'left');
         
         
             // ---- Search ----
@@ -395,6 +397,61 @@ protected function sendBookingCreatedEmail(int $bookingId): bool
         }
 
         return $this->respond(['status' => 'success']);
+    }
+
+
+    public function cancel($id = null)
+    {
+        $booking = $this->model->find($id);
+        if (!$booking) {
+            return $this->failNotFound('Booking not found');
+        }
+
+        $data = $this->request->getJSON(true) ?? [];
+        $cancelReason = trim((string) ($data['cancel_reason'] ?? ''));
+
+        if ($cancelReason === '') {
+            return $this->failValidationError('cancel_reason is required');
+        }
+
+        $cancelledBy = $this->getAuthenticatedEmployeeId();
+
+        $updateData = [
+            'status' => 'cancelled',
+            'cancel_reason' => $cancelReason,
+            'cancelled_at' => date('Y-m-d H:i:s'),
+            'cancelled_by' => $cancelledBy,
+        ];
+
+        $this->model->update($id, $updateData);
+
+        return $this->respond([
+            'status' => 'success',
+            'message' => 'Booking cancelled successfully',
+            'data' => array_merge(['id' => (int) $id], $updateData)
+        ]);
+    }
+
+    protected function getAuthenticatedEmployeeId(): ?int
+    {
+        $auth = $this->request->getHeaderLine('Authorization');
+        if (!preg_match('/Bearer\s+(\S+)/', $auth, $matches)) {
+            return null;
+        }
+
+        $token = $matches[1] ?? '';
+        if ($token === '') {
+            return null;
+        }
+
+        $db = \Config\Database::connect();
+        $employee = $db->table('employees')
+            ->select('id')
+            ->where('api_token', $token)
+            ->get()
+            ->getRowArray();
+
+        return $employee ? (int) $employee['id'] : null;
     }
 
 
