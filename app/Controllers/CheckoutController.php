@@ -2,9 +2,8 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
 
-class CheckoutController extends ResourceController
+class CheckoutController extends BaseApiController
 {
     protected $format = 'json';
 
@@ -136,6 +135,8 @@ class CheckoutController extends ResourceController
     {
         $db = \Config\Database::connect();
         $bookingId = (int)$bookingId;
+        
+        $loggedBy = $this->currentEmployeeId();
 
         $data = $this->request->getJSON(true);
 
@@ -165,6 +166,7 @@ class CheckoutController extends ResourceController
                 'payment_method' => $payment['payment_method'] ?? null,
                 'payment_ref'    => $payment['payment_ref'] ?? null,
                 'payment_date'   => !empty($payment['payment_date']) ? $payment['payment_date'] : null,
+                
             ]);
         }
 
@@ -172,6 +174,7 @@ class CheckoutController extends ResourceController
         $db->table('bookings')->where('id', $bookingId)->update([
             'status'          => 'checked_out',
             'actual_check_out'=> date('Y-m-d H:i:s'),
+            'checked_out_by'    => $loggedBy ?? null,
             'checkout_remarks'=> $checkoutRemarks,
         ]);
 
