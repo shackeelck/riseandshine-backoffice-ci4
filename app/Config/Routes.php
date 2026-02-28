@@ -68,6 +68,7 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->get('bookings/(:num)/guests', 'BookingController::guests/$1');
     $routes->post('bookings', 'BookingController::create');
     $routes->put('bookings/(:num)', 'BookingController::update/$1');
+    $routes->post('bookings/(:num)/cancel', 'BookingController::cancel/$1');
     $routes->delete('bookings/(:num)', 'BookingController::delete/$1');
     
     $routes->get('availability/check', 'AvailabilityController::check');
