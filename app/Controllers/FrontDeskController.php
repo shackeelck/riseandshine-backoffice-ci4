@@ -2,9 +2,8 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
 
-class FrontDeskController extends ResourceController
+class FrontDeskController extends BaseApiController
 {
     public function getCheckin($bookingId)
     {
@@ -105,6 +104,8 @@ class FrontDeskController extends ResourceController
     {
         $data = $this->request->getJSON(true);
         $db = \Config\Database::connect();
+        
+        $loggedBy = $this->currentEmployeeId();
 
         $db->table('bookings')
             ->where('id', $id)
@@ -113,7 +114,8 @@ class FrontDeskController extends ResourceController
                 'status' => 'checked_in',
                 'actual_check_in' => date('Y-m-d H:i:s'),
                 'early_check_in' => $data['early_check_in'] ?? 0,
-                'late_check_out' => $data['late_check_out'] ?? 0
+                'late_check_out' => $data['late_check_out'] ?? 0,
+                'checked_in_by' => $loggedBy
             ]);
         
        // echo $db->getLastQuery();

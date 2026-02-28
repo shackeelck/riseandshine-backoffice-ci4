@@ -8,7 +8,7 @@ use App\Models\RoomInventoryModel;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 
 
-class BookingController extends ResourceController
+class BookingController extends BaseApiController
 {
     protected $modelName = BookingModel::class;
     protected $format    = 'json';
@@ -16,8 +16,8 @@ class BookingController extends ResourceController
     public function index()
     {
         $db = \Config\Database::connect();
-        $session = session();
-        echo ($session->get('user_name'));
+        
+        $loggedBy = $this->currentUserRole();
         // ---- Query params ----
         $page = max(1, (int) ($this->request->getGet('page') ?? 1));
         $perPage = (int) ($this->request->getGet('perPage') ?? 15);
@@ -55,6 +55,8 @@ class BookingController extends ResourceController
             room_inventory.room_number,
             bkd.username as bookedby,
             ent.username as enteredby,
+            cin.username as checkedinby,
+            cout.username as checkedoutby,
             can.username as cancelledby,
             {$primaryGuestSub} AS primary_guest_name,
             {$primaryCountrySub} AS primary_guest_country,
@@ -69,6 +71,8 @@ class BookingController extends ResourceController
         
         $builder->join('employees bkd', 'bkd.id = b.booked_by', 'left');
         $builder->join('employees ent', 'ent.id = b.created_by', 'left');
+        $builder->join('employees cin', 'cin.id = b.checked_in_by', 'left');
+        $builder->join('employees cout', 'cout.id = b.checked_out_by', 'left');
         $builder->join('employees can', 'can.id = b.cancelled_by', 'left');
         
         
@@ -201,6 +205,14 @@ class BookingController extends ResourceController
        
         $data['reference'] = $this->generateReference();
        
+        $loggedBy = $this->currentEmployeeId();
+
+        if (!$loggedBy) {
+            return $this->failUnauthorized('Invalid/expired token');
+        }
+
+        $data['booked_by'] = $loggedBy;
+        $data['created_by'] = $loggedBy;
         $data['arrival_flight']    = $data['arrival_flight'] ?? null;
         $data['departure_flight']  = $data['departure_flight'] ?? null;
        
@@ -360,40 +372,43 @@ protected function sendBookingCreatedEmail(int $bookingId): bool
 
         $this->model->update($id, $data);
         
-        // Refresh guest data
-        $guestTable->where('booking_id', $id)->delete();
-        if($p['dob'] == '0000-00-00'){$p['dob'] = null;}
-        $post = [
-            'booking_id' => $id,
-            'is_primary' => 1,
-            'name'       => $p['name'],
-            'contact'    => $p['contact'],
-            'email'      => $p['email'] ?? null,
-            'dob'        => $p['dob'] ?? null,
-            'id_proof'   => $p['id_proof'] ?? null,
-            'nationality_id'   => $p['nationality_id'] ?? null
-        ];
-            
-        
-        $guestTable->insert( $post);
-        
-        
-
-        foreach ($eg as $guest) {
-            if (empty($guest['name'])) continue;
-            if($guest['dob'] == '0000-00-00'){$guest['dob'] = null;}
-            $extrapost = [
+        if(isset($p) and !empty($p)){
+            // Refresh guest data
+            $guestTable->where('booking_id', $id)->delete();
+            if($p['dob'] == '0000-00-00'){$p['dob'] = null;}
+            $post = [
                 'booking_id' => $id,
-                'is_primary' => 0,
-                'name'       => $guest['name'],
-                'dob'        => $guest['dob'] ?? null,
-                'id_proof'   => $guest['id_proof'] ?? null,
-                'nationality_id'   => $guest['nationality_id'] ?? null
+                'is_primary' => 1,
+                'name'       => $p['name'],
+                'contact'    => $p['contact'],
+                'email'      => $p['email'] ?? null,
+                'dob'        => $p['dob'] ?? null,
+                'id_proof'   => $p['id_proof'] ?? null,
+                'nationality_id'   => $p['nationality_id'] ?? null
             ];
-            
-          
-            
-            $guestTable->insert($extrapost);
+
+
+            $guestTable->insert( $post);
+        
+        }
+        
+        if(isset($eg) and !empty($eg)){
+            foreach ($eg as $guest) {
+                if (empty($guest['name'])) continue;
+                if($guest['dob'] == '0000-00-00'){$guest['dob'] = null;}
+                $extrapost = [
+                    'booking_id' => $id,
+                    'is_primary' => 0,
+                    'name'       => $guest['name'],
+                    'dob'        => $guest['dob'] ?? null,
+                    'id_proof'   => $guest['id_proof'] ?? null,
+                    'nationality_id'   => $guest['nationality_id'] ?? null
+                ];
+
+
+
+                $guestTable->insert($extrapost);
+            }
         }
 
         return $this->respond(['status' => 'success']);
