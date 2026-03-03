@@ -61,12 +61,12 @@ class BankAccountController extends ResourceController
             'bank_code' => trim((string) ($data['bank_code'] ?? '')),
             'bank_details' => trim((string) ($data['bank_details'] ?? '')),
             'currency' => strtoupper(trim((string) ($data['currency'] ?? ''))),
-            'is_default' => $this->normalizeDefault($data['is_default'] ?? ($data['default'] ?? 'no')),
+            'is_default' => $this->normalizeDefault($data['is_default'] ?? ($data['default'] ?? 0)),
             'status' => isset($data['status']) ? (int) $data['status'] : 1,
         ];
 
-        if ($insert['is_default'] === 'yes') {
-            $this->model->builder()->set('is_default', 'no')->update();
+        if ($insert['is_default'] === 1) {
+            $this->model->builder()->set('is_default', 0)->update();
         }
 
         $id = $this->model->insert($insert);
@@ -110,8 +110,8 @@ class BankAccountController extends ResourceController
             return $this->failValidationError('Nothing to update');
         }
 
-        if (($update['is_default'] ?? null) === 'yes') {
-            $this->model->builder()->where('id !=', $id)->set('is_default', 'no')->update();
+        if (($update['is_default'] ?? null) === 1) {
+            $this->model->builder()->where('id !=', $id)->set('is_default', 0)->update();
         }
 
         $this->model->update($id, $update);
@@ -130,13 +130,13 @@ class BankAccountController extends ResourceController
         return $this->respondDeleted(['status' => 'deleted']);
     }
 
-    private function normalizeDefault($value): string
+    private function normalizeDefault($value): int
     {
         if (is_bool($value)) {
-            return $value ? 'yes' : 'no';
+            return $value ? 1 : 0;
         }
 
         $normalized = strtolower(trim((string) $value));
-        return in_array($normalized, ['yes', '1', 'true'], true) ? 'yes' : 'no';
+        return in_array($normalized, ['yes', '1', 'true'], true) ? 1 : 0;
     }
 }
