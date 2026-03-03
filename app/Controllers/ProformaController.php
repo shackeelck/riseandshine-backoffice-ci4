@@ -301,13 +301,58 @@ class ProformaController extends ResourceController
             ->get()
             ->getResultArray();
 
-        // 3) Generate filename
+        // 3) Fetch linked booking details for proforma
+        $bookings = $db->table('proforma_bookings pb')
+            ->select("pb.id,
+                pb.proforma_id,
+                pb.booking_id,
+                b.reference AS booking_no,
+                DATE(b.created_at) AS booking_date,
+                (
+                    SELECT bg.name
+                    FROM booking_guests bg
+                    WHERE bg.booking_id = b.id AND bg.is_primary = 1
+                    ORDER BY bg.id ASC
+                    LIMIT 1
+                ) AS primary_pax_name,
+                rt.name AS booked_room_category,
+                b.check_in,
+                b.check_out,
+                DATEDIFF(b.check_out, b.check_in) AS no_of_nights,
+                b.guests AS pax", false)
+            ->join('bookings b', 'b.id = pb.booking_id', 'left')
+            ->join('room_types rt', 'rt.id = b.room_type_id', 'left')
+            ->where('pb.proforma_id', $id)
+            ->orderBy('pb.id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        // 4) Fetch active default bank account
+        $defaultBankAccount = $db->table('bank_accounts')
+            ->where('is_default', 1)
+            ->where('status', 1)
+            ->orderBy('id', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        // 5) Resolve logo for PDF
+        $logoPath = FCPATH . 'logo.png';
+        $logoDataUri = null;
+        if (is_file($logoPath)) {
+            $imageType = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
+            if (in_array($imageType, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
+                $mime = $imageType === 'jpg' ? 'jpeg' : $imageType;
+                $logoDataUri = 'data:image/' . $mime . ';base64,' . base64_encode((string) file_get_contents($logoPath));
+            }
+        }
+
+        // 6) Generate filename
         // If you have a proforma number field, use it. Else fallback:
         $proformaNo = $proforma['proforma_no'] ?? ('PF-' . str_pad((string)$id, 6, '0', STR_PAD_LEFT));
         $safeNo = preg_replace('/[^A-Za-z0-9\-_]/', '-', $proformaNo);
         $fileName = $safeNo . '.pdf';
 
-        // 4) Create folder if not exists
+        // 7) Create folder if not exists
         $publicDir = rtrim(FCPATH, '/\\'); // points to /public
         $saveDir = $publicDir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'proformas';
 
@@ -317,14 +362,17 @@ class ProformaController extends ResourceController
 
         $filePath = $saveDir . DIRECTORY_SEPARATOR . $fileName;
 
-        // 5) Build HTML (simple inline template)
+        // 8) Build HTML (simple inline template)
         $html = view('templates/proforma_pdf', [
             'p' => $proforma,
             'items' => $items,
-            'proformaNo' => $proformaNo
+            'bookings' => $bookings,
+            'defaultBankAccount' => $defaultBankAccount,
+            'logoDataUri' => $logoDataUri,
+            'proformaNo' => $proformaNo,
         ]);
 
-        // 6) Generate PDF with mPDF
+        // 9) Generate PDF with mPDF
         try {
             $mpdf = new \Mpdf\Mpdf([
                 'mode' => 'utf-8',
@@ -342,7 +390,7 @@ class ProformaController extends ResourceController
             return $this->failServerError('PDF generation failed: ' . $e->getMessage());
         }
 
-        // 7) Return URL
+        // 10) Return URL
         $baseUrl = rtrim(base_url(), '/');
         $fileUrl = $baseUrl . '/uploads/proformas/' . $fileName;
 

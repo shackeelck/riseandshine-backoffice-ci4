@@ -497,13 +497,17 @@ protected function sendBookingCreatedEmail(int $bookingId): bool
     {
         $db = \Config\Database::connect();
         $guests = $db->table('booking_guests')
-                     //->select("booking_guests.*, NULLIF(dob, '0000-00-00') AS dob")
                      ->where('booking_id', $id)
-                     ->orderBy('is_primary', 'DESC')->orderBy('id', 'ASC')
+                     ->orderBy('is_primary', 'DESC')
+                     ->orderBy('id', 'ASC')
                      ->get()
-                     ->getResult();
-        
-        //print_r($guests);
+                     ->getResultArray();
+
+        foreach ($guests as &$guest) {
+            $guest['is_primary'] = (string) ($guest['is_primary'] ?? '0');
+        }
+        unset($guest);
+
         return $this->respond($guests);
     }
     
