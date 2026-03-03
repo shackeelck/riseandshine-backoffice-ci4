@@ -368,7 +368,6 @@ class ProformaController extends ResourceController
             'items' => $items,
             'bookings' => $bookings,
             'defaultBankAccount' => $defaultBankAccount,
-            'logoDataUri' => $logoDataUri,
             'proformaNo' => $proformaNo,
         ]);
 
