@@ -5,6 +5,7 @@
   <style>
     body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .logo { width: 120px; margin-bottom: 8px; }
     .title { text-align: center; font-size: 18px; font-weight: bold; padding: 8px 0; border-bottom: 1px solid #ddd; margin: 12px 0; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ddd; padding: 6px; }
@@ -18,6 +19,9 @@
 
   <div class="header">
     <div>
+      <?php if (!empty($logoDataUri)): ?>
+        <img src="<?= esc($logoDataUri, 'attr') ?>" alt="Rise &amp; Shine Logo" class="logo">
+      <?php endif; ?>
       <div style="font-size:16px;font-weight:bold;">Rise &amp; Shine Hotel</div>
       <div class="muted">HM LOT NO. 20015</div>
       <div class="muted">Nikagas Magu</div>
@@ -71,6 +75,55 @@
       <th class="right"><?= number_format((float)($p['total'] ?? $sum), 2) ?></th>
     </tr>
   </table>
+
+  <?php if (!empty($bookings)): ?>
+    <h3 style="margin-top:16px;">Connected Booking Details</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Booking No</th>
+          <th>Booking Date</th>
+          <th>Primary Pax Name</th>
+          <th>Room Category</th>
+          <th>Check-In</th>
+          <th>Check-Out</th>
+          <th>No. of Nights</th>
+          <th>Pax</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($bookings as $b): ?>
+          <tr>
+            <td><?= esc($b['booking_no'] ?? '-') ?></td>
+            <td><?= esc($b['booking_date'] ?? '-') ?></td>
+            <td><?= esc($b['primary_pax_name'] ?? '-') ?></td>
+            <td><?= esc($b['booked_room_category'] ?? '-') ?></td>
+            <td><?= esc($b['check_in'] ?? '-') ?></td>
+            <td><?= esc($b['check_out'] ?? '-') ?></td>
+            <td class="right"><?= esc($b['no_of_nights'] ?? 0) ?></td>
+            <td class="right"><?= esc($b['pax'] ?? 0) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php endif; ?>
+
+  <?php if (!empty($defaultBankAccount)): ?>
+    <div style="margin-top:16px;">
+      <h3 style="margin:0 0 6px 0;">Bank Account Details</h3>
+      <div><b>Bank:</b> <?= esc($defaultBankAccount['bank_name'] ?? '-') ?></div>
+      <div><b>Account No:</b> <?= esc($defaultBankAccount['account_no'] ?? '-') ?></div>
+      <?php if (!empty($defaultBankAccount['bank_code'])): ?>
+        <div><b>Bank Code:</b> <?= esc($defaultBankAccount['bank_code']) ?></div>
+      <?php endif; ?>
+      <?php if (!empty($defaultBankAccount['currency'])): ?>
+        <div><b>Currency:</b> <?= esc($defaultBankAccount['currency']) ?></div>
+      <?php endif; ?>
+      <?php if (!empty($defaultBankAccount['bank_details'])): ?>
+        <div><b>Details:</b> <?= nl2br(esc($defaultBankAccount['bank_details'])) ?></div>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
 
 </body>
 </html>
