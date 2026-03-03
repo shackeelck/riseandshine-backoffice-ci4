@@ -128,6 +128,13 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->put('minibar/(:num)', 'MinibarItemController::update/$1');
     $routes->delete('minibar/(:num)', 'MinibarItemController::delete/$1');
 
+    // Bank Accounts
+    $routes->get('bank-accounts', 'BankAccountController::index');
+    $routes->get('bank-accounts/(:num)', 'BankAccountController::show/$1');
+    $routes->post('bank-accounts', 'BankAccountController::create');
+    $routes->put('bank-accounts/(:num)', 'BankAccountController::update/$1');
+    $routes->delete('bank-accounts/(:num)', 'BankAccountController::delete/$1');
+
 
 
 });
