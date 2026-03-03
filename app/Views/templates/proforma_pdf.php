@@ -94,7 +94,7 @@
         <tr>
           <td><?= esc($it['description'] ?? '') ?></td>
           <td><?= esc($it['unit_type'] ?? '') ?></td>
-          <td class="right"><?= esc($it['units'] ?? 0) ?></td>
+          <td class="right"><?= esc($it['qty'] ?? 0) ?></td>
           <td class="right"><?= number_format((float)($it['unit_price'] ?? 0), 2) ?></td>
           <td class="right"><?= number_format($lt, 2) ?></td>
         </tr>
