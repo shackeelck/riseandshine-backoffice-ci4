@@ -336,7 +336,7 @@ class ProformaController extends ResourceController
             ->getRowArray();
 
         // 5) Resolve logo for PDF
-        $logoPath = FCPATH . 'logo.png';
+       /* $logoPath = FCPATH . 'logo.png';
         $logoDataUri = null;
         if (is_file($logoPath)) {
             $imageType = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
@@ -344,7 +344,7 @@ class ProformaController extends ResourceController
                 $mime = $imageType === 'jpg' ? 'jpeg' : $imageType;
                 $logoDataUri = 'data:image/' . $mime . ';base64,' . base64_encode((string) file_get_contents($logoPath));
             }
-        }
+        }*/
 
         // 6) Generate filename
         // If you have a proforma number field, use it. Else fallback:
