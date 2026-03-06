@@ -2,11 +2,9 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
-
 use Mpdf\Mpdf;
 
-class ProformaController extends ResourceController
+class ProformaController extends BaseApiController
 {
     protected $format = 'json';
 
@@ -22,8 +20,10 @@ class ProformaController extends ResourceController
         $q = trim($this->request->getGet('q') ?? '');
 
         $builder = $db->table('proformas p')
-            ->select('p.*, customers.name AS customer_name')
-            ->join('customers', 'customers.id = p.customer_id', 'left');
+            ->select('p.*, customers.name AS customer_name,cr.username as createdby,up.username as updatedby')
+            ->join('customers', 'customers.id = p.customer_id', 'left')
+            ->join('employees cr', 'cr.id = p.created_by', 'left')
+            ->join('employees up', 'up.id = p.updated_by', 'left');
 
         if ($q !== '') {
             $builder->groupStart()
@@ -143,6 +143,8 @@ class ProformaController extends ResourceController
         $data = $this->request->getJSON(true);
         $db = db_connect();
         $db->transStart();
+        
+        $loggedBy = $this->currentEmployeeId();
 
         $proformaNo = 'PF-' . date('Y') . '-' . str_pad(rand(1,9999), 4, '0', STR_PAD_LEFT);
 
@@ -155,6 +157,7 @@ class ProformaController extends ResourceController
             'subtotal' => $data['subtotal'],
             'total' => $data['total'],
             'notes' => $data['notes'] ?? '',
+            'created_by' => $loggedBy
         ]);
 
         $pid = $db->insertID();
@@ -175,7 +178,7 @@ class ProformaController extends ResourceController
                 'qty' => $it['qty'],
                 'unit_type' => $it['unit_type'],
                 'unit_price' => $it['unit_price'],
-                'line_total' => 0,
+                'line_total' => ($it['qty'] * $it['unit_price']),
                 'sort_order' => $i + 1
             ]);
             
@@ -190,6 +193,8 @@ class ProformaController extends ResourceController
     public function update($id = null)
     {
         $db = \Config\Database::connect();
+        
+        $loggedBy = $this->currentEmployeeId();
         $id = (int) $id;
 
        $data = $this->request->getJSON(true);
@@ -204,7 +209,7 @@ class ProformaController extends ResourceController
         $grandTotal = 0;
          foreach ($items as &$i) {
             $unit = (float) ($i['unit_price'] ?? 0);
-            $qty  = (float) ($i['units'] ?? 0);
+            $qty  = (float) ($i['qty'] ?? 0);
             $i['line_total'] = round($unit * $qty, 2);
             $grandTotal += $i['line_total'];
         }
@@ -217,7 +222,8 @@ class ProformaController extends ResourceController
             'due_date'     => $data['due_date'] ?? null,
             'currency'     => $data['currency'] ?? 'USD',
             'total'        => round($grandTotal, 2),
-            'updated_at'   => date('Y-m-d H:i:s')
+            'updated_at'   => date('Y-m-d H:i:s'),
+            'updated_by' => $loggedBy
         ]);
 
         // 3) Replace items
@@ -228,9 +234,9 @@ class ProformaController extends ResourceController
                 'proforma_id' => $id,
                 'description' => $i['description'] ?? '',
                 'unit_price'  => (float) ($i['unit_price'] ?? 0),
-                'units'       => (float) ($i['units'] ?? 0),
+                'qty'       => (float) ($i['qty'] ?? 0),
                 'unit_type'   => $i['unit_type'] ?? 'per_night',
-                'line_total'  => (float) ($i['line_total'] ?? 0),
+                'line_total'  => (float) ($i['qty'] * $i['unit_price']),
             ]);
         }
 

@@ -100,9 +100,9 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     
     
     $routes->get('proforma', 'ProformaController::index');
-    $routes->get('proformas/(:num)', 'ProformaController::show/$1');
+    $routes->get('proforma/(:num)', 'ProformaController::show/$1');
     $routes->post('proforma', 'ProformaController::create');
-    $routes->put('proformas/(:num)', 'ProformaController::update/$1');
+    $routes->put('proforma/(:num)', 'ProformaController::update/$1');
     $routes->delete('proforma/(:num)', 'ProformaController::delete/$1');
 
     $routes->get('proforma/suggest', 'ProformaController::suggest'); 
