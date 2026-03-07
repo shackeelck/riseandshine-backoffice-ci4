@@ -26,6 +26,9 @@
 
     .totals { margin-top: 10px; width: 40%; margin-left: auto; }
     .seal { width: 140px; max-width: 100%; }
+    .invoice-detail-line { margin-bottom: 6px; }
+    .hotel-inline { margin-top: 2px; line-height: 1.5; }
+    .bank-line { margin-bottom: 7px; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -36,16 +39,13 @@
         <?php if (!empty($logoPath)): ?>
           <img src="<?= esc($logoPath) ?>" alt="Rise &amp; Shine Logo" class="logo">
         <?php endif; ?>
-        <div style="font-size:16px;font-weight:bold;">Rise &amp; Shine Hotel</div>
-        <div class="muted">HM LOT NO. 20015</div>
-        <div class="muted">Nikagas Magu</div>
-        <div class="muted">Maldives</div>
+        <div class="muted hotel-inline">Rise &amp; Shine Hotel | HM LOT NO. 20015 | Nikagas Magu | Maldives</div>
       </td>
       <td style="width:40%;" class="right">
-        <div><b>Proforma No:</b> <?= esc($proformaNo) ?></div>
-        <div><b>Invoice Date:</b> <?= esc($p['invoice_date'] ?? '-') ?></div>
-        <div><b>Due Date:</b> <?= esc($p['due_date'] ?? '-') ?></div>
-        <div><b>Currency:</b> <?= esc($p['currency'] ?? '-') ?></div>
+        <div class="invoice-detail-line"><b>Proforma No:</b> <?= esc($proformaNo) ?></div>
+        <div class="invoice-detail-line"><b>Invoice Date:</b> <?= esc($p['invoice_date'] ?? '-') ?></div>
+        <div class="invoice-detail-line"><b>Due Date:</b> <?= esc($p['due_date'] ?? '-') ?></div>
+        <div class="invoice-detail-line"><b>Currency:</b> <?= esc($p['currency'] ?? '-') ?></div>
       </td>
     </tr>
   </table>
@@ -133,8 +133,18 @@
     <tr>
       <td style="width:70%; padding-right:10px;">
         <h3 style="margin:0 0 6px 0;">Remittance to be made to</h3>
-        <?php if (!empty($defaultBankAccount['bank_details'])): ?>
-          <div><?= nl2br(esc($defaultBankAccount['bank_details'])) ?></div>
+        <?php
+          $accountName = trim((string)($defaultBankAccount['account_name'] ?? 'Rise & Shine Hotel'));
+          $accountNo = trim((string)($defaultBankAccount['account_no'] ?? '-'));
+          $bankName = trim((string)($defaultBankAccount['bank_name'] ?? '-'));
+        ?>
+        <?php if (!empty($defaultBankAccount)): ?>
+          <div class="bank-line">Account Name: <b><?= esc($accountName !== '' ? $accountName : '-') ?></b></div>
+          <div class="bank-line">Account No: <b><?= esc($accountNo !== '' ? $accountNo : '-') ?></b></div>
+          <div class="bank-line">Bank Name: <b><?= esc($bankName !== '' ? $bankName : '-') ?></b></div>
+          <?php if (!empty($defaultBankAccount['bank_details'])): ?>
+            <div class="bank-line"><?= nl2br(esc($defaultBankAccount['bank_details'])) ?></div>
+          <?php endif; ?>
         <?php else: ?>
           <div class="muted">-</div>
         <?php endif; ?>
