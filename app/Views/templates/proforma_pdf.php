@@ -102,14 +102,17 @@
     </tbody>
   </table>
 
+  <?php $invoiceTotal = (float)($p['total'] ?? $sum); ?>
   <table class="totals">
     <tr>
       <th>Total</th>
-      <th class="right"><?= number_format((float)($p['total'] ?? $sum), 2) ?></th>
+      <th class="right"><?= number_format($invoiceTotal, 2) ?></th>
     </tr>
   </table>
 
-  
+  <div style="margin-top:8px;">
+    <b>Amount in Words:</b> <?= esc(amount_to_words($invoiceTotal, (string)($p['currency'] ?? 'USD'))) ?>
+  </div>
 
   <?php if (!empty($defaultBankAccount)): ?>
     <div style="margin-top:16px;">
