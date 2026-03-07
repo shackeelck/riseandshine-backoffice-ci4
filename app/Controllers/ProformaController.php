@@ -286,6 +286,8 @@ class ProformaController extends BaseApiController
             return $this->failValidationError('Invalid proforma id');
         }
 
+        helper('number_to_words');
+
         $db = \Config\Database::connect();
 
         // 1) Fetch proforma header
@@ -406,3 +408,5 @@ class ProformaController extends BaseApiController
         ]);
     }
 }
+
+
