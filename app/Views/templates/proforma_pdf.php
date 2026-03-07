@@ -4,36 +4,51 @@
   <meta charset="utf-8">
   <style>
     body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .logo { width: 120px; margin-bottom: 8px; }
-    .title { text-align: center; font-size: 18px; font-weight: bold; padding: 8px 0; border-bottom: 1px solid #ddd; margin: 12px 0; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ddd; padding: 6px; }
     th { background: #f5f5f5; text-align: left; }
     .right { text-align: right; }
     .muted { color: #555; }
+    .title { text-align: center; font-size: 18px; font-weight: bold; padding: 8px 0; border-bottom: 1px solid #ddd; margin: 12px 0; }
+    .logo { width: 90px; margin-bottom: 8px; }
+
+    .header-table,
+    .header-table td,
+    .bank-seal-table,
+    .bank-seal-table td {
+      border: none;
+      padding: 0;
+    }
+
+    .header-table td { vertical-align: top; }
+    .bank-seal-table { margin-top: 16px; }
+    .bank-seal-table td { vertical-align: top; }
+
     .totals { margin-top: 10px; width: 40%; margin-left: auto; }
+    .seal { width: 140px; max-width: 100%; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div>
-      
-        <img src="./logo.png" alt="Rise &amp; Shine Logo" class="logo" style ="width:90px;">
-      
-      <div style="font-size:16px;font-weight:bold;">Rise &amp; Shine Hotel</div>
-      <div class="muted">HM LOT NO. 20015</div>
-      <div class="muted">Nikagas Magu</div>
-      <div class="muted">Maldives</div>
-    </div>
-    <div class="right">
-      <div><b>Proforma No:</b> <?= esc($proformaNo) ?></div>
-      <div><b>Invoice Date:</b> <?= esc($p['invoice_date'] ?? '-') ?></div>
-      <div><b>Due Date:</b> <?= esc($p['due_date'] ?? '-') ?></div>
-      <div><b>Currency:</b> <?= esc($p['currency'] ?? '-') ?></div>
-    </div>
-  </div>
+  <table class="header-table">
+    <tr>
+      <td style="width:60%;">
+        <?php if (!empty($logoPath)): ?>
+          <img src="<?= esc($logoPath) ?>" alt="Rise &amp; Shine Logo" class="logo">
+        <?php endif; ?>
+        <div style="font-size:16px;font-weight:bold;">Rise &amp; Shine Hotel</div>
+        <div class="muted">HM LOT NO. 20015</div>
+        <div class="muted">Nikagas Magu</div>
+        <div class="muted">Maldives</div>
+      </td>
+      <td style="width:40%;" class="right">
+        <div><b>Proforma No:</b> <?= esc($proformaNo) ?></div>
+        <div><b>Invoice Date:</b> <?= esc($p['invoice_date'] ?? '-') ?></div>
+        <div><b>Due Date:</b> <?= esc($p['due_date'] ?? '-') ?></div>
+        <div><b>Currency:</b> <?= esc($p['currency'] ?? '-') ?></div>
+      </td>
+    </tr>
+  </table>
 
   <div class="title">PROFORMA INVOICE</div>
 
@@ -43,9 +58,9 @@
       <span class="muted"><?= esc($p['customer_email']) ?></span>
     <?php endif; ?>
   </div>
-    
-    <?php if (!empty($bookings)): ?>
-    <h3 style="margin-top:16px;"> Booking Details</h3>
+
+  <?php if (!empty($bookings)): ?>
+    <h3 style="margin-top:16px;">Booking Details</h3>
     <table>
       <thead>
         <tr>
@@ -75,8 +90,8 @@
       </tbody>
     </table>
   <?php endif; ?>
-  
-   <h3 style="margin-top:16px;"> Invoice Particulars</h3> 
+
+  <h3 style="margin-top:16px;">Invoice Particulars</h3>
   <table>
     <thead>
       <tr>
@@ -114,22 +129,23 @@
     <b>Amount in Words:</b> <?= esc(amount_to_words($invoiceTotal, (string)($p['currency'] ?? 'USD'))) ?>
   </div>
 
-  <?php if (!empty($defaultBankAccount)): ?>
-    <div style="margin-top:16px;">
-      <h3 style="margin:0 0 6px 0;">Remittance to be made to</h3>
-      <?php /*?><div><b>Bank:</b> <?= esc($defaultBankAccount['bank_name'] ?? '-') ?></div>
-      <div><b>Account No:</b> <?= esc($defaultBankAccount['account_no'] ?? '-') ?></div>
-      <?php if (!empty($defaultBankAccount['bank_code'])): ?>
-        <div><b>Bank Code:</b> <?= esc($defaultBankAccount['bank_code']) ?></div>
-      <?php endif; ?>
-      <?php if (!empty($defaultBankAccount['currency'])): ?>
-        <div><b>Currency:</b> <?= esc($defaultBankAccount['currency']) ?></div>
-      <?php endif; ?><?php */?>
-      <?php if (!empty($defaultBankAccount['bank_details'])): ?>
-        <div> <?= nl2br(esc($defaultBankAccount['bank_details'])) ?></div>
-      <?php endif; ?>
-    </div>
-  <?php endif; ?>
+  <table class="bank-seal-table">
+    <tr>
+      <td style="width:70%; padding-right:10px;">
+        <h3 style="margin:0 0 6px 0;">Remittance to be made to</h3>
+        <?php if (!empty($defaultBankAccount['bank_details'])): ?>
+          <div><?= nl2br(esc($defaultBankAccount['bank_details'])) ?></div>
+        <?php else: ?>
+          <div class="muted">-</div>
+        <?php endif; ?>
+      </td>
+      <td style="width:30%; text-align:right;">
+        <?php if (!empty($sealPath)): ?>
+          <img src="<?= esc($sealPath) ?>" alt="Company Seal" class="seal">
+        <?php endif; ?>
+      </td>
+    </tr>
+  </table>
 
 </body>
 </html>

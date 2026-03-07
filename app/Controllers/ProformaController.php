@@ -343,16 +343,12 @@ class ProformaController extends BaseApiController
             ->get()
             ->getRowArray();
 
-        // 5) Resolve logo for PDF
-       /* $logoPath = FCPATH . 'logo.png';
-        $logoDataUri = null;
-        if (is_file($logoPath)) {
-            $imageType = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
-            if (in_array($imageType, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
-                $mime = $imageType === 'jpg' ? 'jpeg' : $imageType;
-                $logoDataUri = 'data:image/' . $mime . ';base64,' . base64_encode((string) file_get_contents($logoPath));
-            }
-        }*/
+        // 5) Resolve assets for PDF
+        $logoFile = FCPATH . 'logo.png';
+        $sealFile = FCPATH . 'seal.jpg';
+
+        $logoPath = is_file($logoFile) ? str_replace('\\', '/', $logoFile) : null;
+        $sealPath = is_file($sealFile) ? str_replace('\\', '/', $sealFile) : null;
 
         // 6) Generate filename
         // If you have a proforma number field, use it. Else fallback:
@@ -377,6 +373,8 @@ class ProformaController extends BaseApiController
             'bookings' => $bookings,
             'defaultBankAccount' => $defaultBankAccount,
             'proformaNo' => $proformaNo,
+            'logoPath' => $logoPath,
+            'sealPath' => $sealPath,
         ]);
 
         // 9) Generate PDF with mPDF
@@ -408,5 +406,9 @@ class ProformaController extends BaseApiController
         ]);
     }
 }
+
+
+
+
 
 
