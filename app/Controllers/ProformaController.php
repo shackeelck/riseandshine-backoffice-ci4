@@ -41,6 +41,32 @@ class ProformaController extends BaseApiController
             ->get()
             ->getResultArray();
 
+        $proformaIds = array_values(array_filter(array_map(static function ($row) {
+            return (int)($row['id'] ?? 0);
+        }, $rows)));
+        $bookingsByProforma = [];
+
+        if ($proformaIds !== []) {
+            $bookingRows = $db->table('proforma_bookings pb')
+                ->select('pb.proforma_id, b.id, b.reference, b.check_in, b.check_out, b.status, b.total_amount')
+                ->join('bookings b', 'b.id = pb.booking_id', 'left')
+                ->whereIn('pb.proforma_id', $proformaIds)
+                ->orderBy('b.check_in', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            foreach ($bookingRows as $bookingRow) {
+                $proformaId = (int)$bookingRow['proforma_id'];
+                unset($bookingRow['proforma_id']);
+                $bookingsByProforma[$proformaId][] = $bookingRow;
+            }
+        }
+
+        foreach ($rows as &$row) {
+            $row['bookings'] = $bookingsByProforma[(int)$row['id']] ?? [];
+        }
+        unset($row);
+
         return $this->respond([
             'data' => $rows,
             'meta' => [
@@ -406,7 +432,6 @@ class ProformaController extends BaseApiController
         ]);
     }
 }
-
 
 
 
