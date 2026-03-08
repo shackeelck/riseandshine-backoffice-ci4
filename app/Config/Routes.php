@@ -103,6 +103,7 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->get('proforma/(:num)', 'ProformaController::show/$1');
     $routes->post('proforma', 'ProformaController::create');
     $routes->put('proforma/(:num)', 'ProformaController::update/$1');
+    $routes->post('proforma/(:num)/cancel', 'ProformaController::cancel/$1');
     $routes->delete('proforma/(:num)', 'ProformaController::delete/$1');
 
     $routes->get('proforma/suggest', 'ProformaController::suggest'); 
@@ -223,3 +224,4 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
 if (file_exists(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';
 }
+

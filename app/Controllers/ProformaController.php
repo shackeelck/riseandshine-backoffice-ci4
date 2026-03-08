@@ -306,6 +306,88 @@ class ProformaController extends BaseApiController
     }
 
     
+    public function cancel($id = null)
+    {
+        $id = (int) $id;
+        if ($id < 1) {
+            return $this->failValidationError('Invalid proforma id');
+        }
+
+        $db = \Config\Database::connect();
+
+        $proforma = $db->table('proformas')->where('id', $id)->get()->getRowArray();
+        if (! $proforma) {
+            return $this->failNotFound('Proforma not found');
+        }
+
+        $data = $this->request->getJSON(true);
+        if (! is_array($data)) {
+            $data = $this->request->getPost() ?? [];
+        }
+
+        $cancelReason = trim((string) ($data['cancel_reason'] ?? ''));
+        if ($cancelReason === '') {
+            return $this->failValidationError('cancel_reason is required');
+        }
+
+        if (($proforma['status'] ?? '') === 'cancelled' || ! empty($proforma['cancelled_at'])) {
+            return $this->respond([
+                'status' => 'success',
+                'message' => 'Proforma already cancelled',
+                'data' => [
+                    'id' => $id,
+                    'cancel_reason' => $proforma['cancel_reason'] ?? null,
+                    'cancelled_at' => $proforma['cancelled_at'] ?? null,
+                    'cancelled_by' => isset($proforma['cancelled_by']) ? (int) $proforma['cancelled_by'] : null,
+                ],
+            ]);
+        }
+
+        foreach (['cancel_reason', 'cancelled_by', 'cancelled_at'] as $field) {
+            if (! $db->fieldExists($field, 'proformas')) {
+                return $this->failServerError('Required field missing in proformas table: ' . $field);
+            }
+        }
+
+        $cancelledBy = $this->currentEmployeeId();
+        if ($cancelledBy === null && isset($data['cancelled_by']) && is_numeric($data['cancelled_by'])) {
+            $cancelledBy = (int) $data['cancelled_by'];
+        }
+
+        if ($cancelledBy === null) {
+            return $this->failUnauthorized('Unable to determine cancelling employee');
+        }
+
+        $updateData = [
+            'cancel_reason' => $cancelReason,
+            'cancelled_at' => date('Y-m-d H:i:s'),
+            'cancelled_by' => $cancelledBy,
+        ];
+
+        if ($db->fieldExists('status', 'proformas')) {
+            $updateData['status'] = 'cancelled';
+        }
+
+        if ($db->fieldExists('updated_at', 'proformas')) {
+            $updateData['updated_at'] = date('Y-m-d H:i:s');
+        }
+
+        if ($db->fieldExists('updated_by', 'proformas')) {
+            $updateData['updated_by'] = $cancelledBy;
+        }
+
+        $updated = $db->table('proformas')->where('id', $id)->update($updateData);
+        if (! $updated) {
+            return $this->failServerError('Unable to cancel proforma');
+        }
+
+        return $this->respond([
+            'status' => 'success',
+            'message' => 'Proforma cancelled successfully',
+            'data' => array_merge(['id' => $id], $updateData),
+        ]);
+    }
+
     public function viewPdf($id = 0){
         // 1. Create instance
        $id = (int)$id;
@@ -433,6 +515,7 @@ class ProformaController extends BaseApiController
         ]);
     }
 }
+
 
 
 
