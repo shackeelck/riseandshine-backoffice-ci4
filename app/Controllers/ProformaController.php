@@ -65,6 +65,7 @@ class ProformaController extends BaseApiController
 
         foreach ($rows as &$row) {
             $row['bookings'] = $bookingsByProforma[(int)$row['id']] ?? [];
+            $row['canceledby'] = isset($row['cancelled_by']) ? (int)$row['cancelled_by'] : null;
         }
         unset($row);
 
@@ -515,6 +516,8 @@ class ProformaController extends BaseApiController
         ]);
     }
 }
+
+
 
 
 

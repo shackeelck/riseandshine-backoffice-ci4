@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #111; position: relative; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ddd; padding: 6px; }
     th { background: #f5f5f5; text-align: left; }
@@ -29,9 +29,34 @@
     .invoice-detail-line { margin-bottom: 6px; }
     .hotel-inline { margin-top: 2px; line-height: 1.5; }
     .bank-line { margin-bottom: 7px; line-height: 1.5; }
+    .cancelled-seal {
+      position: fixed;
+      top: 40%;
+      left: 18%;
+      width: 64%;
+      text-align: center;
+      font-size: 48px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color: #b00000;
+      border: 5px solid #b00000;
+      border-radius: 12px;
+      padding: 12px 0;
+      opacity: 0.2;
+      transform: rotate(-22deg);
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
+  <?php
+    $status = strtolower((string)($p['status'] ?? ''));
+    $isCancelled = in_array($status, ['cancelled', 'canceled'], true) || !empty($p['cancelled_at']);
+  ?>
+
+  <?php if ($isCancelled): ?>
+    <div class="cancelled-seal">CANCELLED</div>
+  <?php endif; ?>
 
   <table class="header-table">
     <tr>
@@ -159,3 +184,7 @@
 
 </body>
 </html>
+
+
+
+
