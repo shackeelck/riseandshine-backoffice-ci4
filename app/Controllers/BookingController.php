@@ -46,6 +46,13 @@ class BookingController extends BaseApiController
         $extraGuestsSub = "(SELECT GROUP_CONCAT(bg.name SEPARATOR ', ')
             FROM booking_guests bg
             WHERE bg.booking_id = b.id AND bg.is_primary = 0)";
+
+        $proformaIdSub = "(SELECT p.id
+            FROM proforma_bookings pb
+            LEFT JOIN proformas p ON p.id = pb.proforma_id
+            WHERE pb.booking_id = b.id
+            ORDER BY pb.id DESC
+            LIMIT 1)";
         
         $proformaNoSub = "(SELECT p.proforma_no
             FROM proforma_bookings pb
@@ -82,6 +89,7 @@ class BookingController extends BaseApiController
             {$primaryGuestSub} AS primary_guest_name,
             {$primaryCountrySub} AS primary_guest_country,
             {$extraGuestsSub} AS extra_guest_names,
+            {$proformaIdSub} AS proforma_id,
             {$proformaNoSub} AS proforma_no,
             {$proformaDateSub} AS proforma_date,
             {$proformaAmountSub} AS invoice_amount
@@ -560,5 +568,8 @@ protected function sendBookingCreatedEmail(int $bookingId): bool
         }
     }*/
 }
+
+
+
 
 
