@@ -20,10 +20,11 @@ class ProformaController extends BaseApiController
         $q = trim($this->request->getGet('q') ?? '');
 
         $builder = $db->table('proformas p')
-            ->select('p.*, customers.name AS customer_name,cr.username as createdby,up.username as updatedby')
+            ->select('p.*, customers.name AS customer_name, cr.username as createdby, up.username as updatedby, cb.username as canceledby')
             ->join('customers', 'customers.id = p.customer_id', 'left')
             ->join('employees cr', 'cr.id = p.created_by', 'left')
-            ->join('employees up', 'up.id = p.updated_by', 'left');
+            ->join('employees up', 'up.id = p.updated_by', 'left')
+            ->join('employees cb', 'cb.id = p.cancelled_by', 'left');
 
         if ($q !== '') {
             $builder->groupStart()
@@ -65,7 +66,6 @@ class ProformaController extends BaseApiController
 
         foreach ($rows as &$row) {
             $row['bookings'] = $bookingsByProforma[(int)$row['id']] ?? [];
-            $row['canceledby'] = isset($row['cancelled_by']) ? (int)$row['cancelled_by'] : null;
         }
         unset($row);
 
