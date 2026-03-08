@@ -64,7 +64,9 @@
         <?php if (!empty($logoPath)): ?>
           <img src="<?= esc($logoPath) ?>" alt="Rise &amp; Shine Logo" class="logo">
         <?php endif; ?>
-        <div class="muted hotel-inline">Rise &amp; Shine Hotel | HM LOT NO. 20015 | Nikagas Magu | Maldives</div>
+        <div class="bold hotel-inline">Rise &amp; Shine Hotel </div>
+        <div class="muted hotel-inline"> HM LOT NO. 20015 | Nikagas Magu </div>
+         <div class="muted hotel-inline"> Hulhumale' | Maldives</div>
       </td>
       <td style="width:40%;" class="right">
         <div class="invoice-detail-line"><b>Proforma No:</b> <?= esc($proformaNo) ?></div>
