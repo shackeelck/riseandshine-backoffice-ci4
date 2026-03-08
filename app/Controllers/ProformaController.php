@@ -41,7 +41,9 @@ class ProformaController extends BaseApiController
             ->get()
             ->getResultArray();
 
-        $proformaIds = array_values(array_filter(array_map(static fn ($row) => (int)($row['id'] ?? 0), $rows)));
+        $proformaIds = array_values(array_filter(array_map(static function ($row) {
+            return (int)($row['id'] ?? 0);
+        }, $rows)));
         $bookingsByProforma = [];
 
         if ($proformaIds !== []) {
