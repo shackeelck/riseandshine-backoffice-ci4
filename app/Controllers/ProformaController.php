@@ -48,7 +48,7 @@ class ProformaController extends BaseApiController
 
         if ($proformaIds !== []) {
             $bookingRows = $db->table('proforma_bookings pb')
-                ->select('pb.proforma_id, b.id, b.reference, b.check_in, b.check_out, b.status, b.total_amount, bg.name AS primary_guest_name')
+                ->select('pb.proforma_id, b.id, b.reference, b.check_in, b.check_out, b.status, bg.name AS primary_guest_name')
                 ->join('bookings b', 'b.id = pb.booking_id', 'left')
                 ->join('booking_guests bg', 'bg.booking_id = b.id AND bg.is_primary = 1', 'left')
                 ->whereIn('pb.proforma_id', $proformaIds)
