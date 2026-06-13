@@ -57,7 +57,7 @@ class AvailabilityChartController extends ResourceController
             ->select('id, room_type_id, check_in, check_out, status')
             ->where('check_in <=', $globalEnd)
             ->where('check_out >=', $extendedStart)
-            ->whereIn('status', ['confirmed', 'pending'])
+            ->whereIn('status', ['confirmed', 'pending','checked_in','checked_out'])
             ->get()->getResultArray();
 
         // total rooms per type from inventory (exclude maintenance)

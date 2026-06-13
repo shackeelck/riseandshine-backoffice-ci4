@@ -46,6 +46,34 @@ class BookingController extends BaseApiController
         $extraGuestsSub = "(SELECT GROUP_CONCAT(bg.name SEPARATOR ', ')
             FROM booking_guests bg
             WHERE bg.booking_id = b.id AND bg.is_primary = 0)";
+
+        $proformaIdSub = "(SELECT p.id
+            FROM proforma_bookings pb
+            LEFT JOIN proformas p ON p.id = pb.proforma_id
+            WHERE pb.booking_id = b.id
+            ORDER BY pb.id DESC
+            LIMIT 1)";
+        
+        $proformaNoSub = "(SELECT p.proforma_no
+            FROM proforma_bookings pb
+            LEFT JOIN proformas p ON p.id = pb.proforma_id
+            WHERE pb.booking_id = b.id
+            ORDER BY pb.id DESC
+            LIMIT 1)";
+
+        $proformaDateSub = "(SELECT p.invoice_date
+            FROM proforma_bookings pb
+            LEFT JOIN proformas p ON p.id = pb.proforma_id
+            WHERE pb.booking_id = b.id
+            ORDER BY pb.id DESC
+            LIMIT 1)";
+
+        $proformaAmountSub = "(SELECT p.total
+            FROM proforma_bookings pb
+            LEFT JOIN proformas p ON p.id = pb.proforma_id
+            WHERE pb.booking_id = b.id
+            ORDER BY pb.id DESC
+            LIMIT 1)";
         
         
         $builder->select("
@@ -60,7 +88,11 @@ class BookingController extends BaseApiController
             can.username as cancelledby,
             {$primaryGuestSub} AS primary_guest_name,
             {$primaryCountrySub} AS primary_guest_country,
-            {$extraGuestsSub} AS extra_guest_names
+            {$extraGuestsSub} AS extra_guest_names,
+            {$proformaIdSub} AS proforma_id,
+            {$proformaNoSub} AS proforma_no,
+            {$proformaDateSub} AS proforma_date,
+            {$proformaAmountSub} AS invoice_amount
         ");
         $builder->join('customers', 'customers.id = b.customer_id', 'left');
         $builder->join('room_types', 'room_types.id = b.room_type_id', 'left');
@@ -536,3 +568,8 @@ protected function sendBookingCreatedEmail(int $bookingId): bool
         }
     }*/
 }
+
+
+
+
+

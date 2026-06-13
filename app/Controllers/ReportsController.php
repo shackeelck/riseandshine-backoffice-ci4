@@ -7,7 +7,8 @@ class ReportsController extends BaseApiController
     protected $format = 'json';
 
     private $reports = [
-        'arrival_forecast' => 'Daily Arrival Report',
+
+        'arrival_forecast' => 'Arrival Forecast',
         'departure_forecast' => 'Departure Forecast',
         'inhouse_report' => 'Inhouse Report',
         'room_occupancy_report' => 'Room Occupancy Report',
@@ -36,6 +37,7 @@ class ReportsController extends BaseApiController
 
     public function arrivalForecast()
     {
+
         return $this->dailyArrivalReport();
     }
 
@@ -217,25 +219,31 @@ class ReportsController extends BaseApiController
         ];
     }
 
+   
     private function getArrivalFilters()
     {
-        $arrivalFilter = trim((string) ($this->request->getGet('filter') ?? 'arrival_today'));
+        $arrivalFilter = trim((string) ($this->request->getGet('filter') ?? 'today'));
+
         $today = date('Y-m-d');
         $tomorrow = date('Y-m-d', strtotime('+1 day'));
 
         switch ($arrivalFilter) {
-            case 'arrival_today':
+            case 'today':
+
+
                 $from = $today;
                 $to = $today;
                 break;
 
-            case 'arrival_tomorrow':
+            case 'tomorrow':
+
                 $from = $tomorrow;
                 $to = $tomorrow;
                 break;
 
+           
             case 'custom':
-            case 'custom_date_range':
+
                 $from = trim((string) ($this->request->getGet('from') ?? ''));
                 $to = trim((string) ($this->request->getGet('to') ?? ''));
 
@@ -294,6 +302,7 @@ class ReportsController extends BaseApiController
 
         return $total;
     }
+
 
     private function isValidDate($date)
     {

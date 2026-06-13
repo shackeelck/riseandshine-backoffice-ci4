@@ -103,6 +103,7 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->get('proforma/(:num)', 'ProformaController::show/$1');
     $routes->post('proforma', 'ProformaController::create');
     $routes->put('proforma/(:num)', 'ProformaController::update/$1');
+    $routes->post('proforma/(:num)/cancel', 'ProformaController::cancel/$1');
     $routes->delete('proforma/(:num)', 'ProformaController::delete/$1');
 
     $routes->get('proforma/suggest', 'ProformaController::suggest'); 
@@ -138,7 +139,6 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     // Reports
     $routes->get('reports', 'ReportsController::index');
     $routes->get('reports/arrival-forecast', 'ReportsController::arrivalForecast');
-    $routes->get('reports/daily-arrival-report', 'ReportsController::dailyArrivalReport');
     $routes->get('reports/departure-forecast', 'ReportsController::departureForecast');
     $routes->get('reports/inhouse-report', 'ReportsController::inhouseReport');
     $routes->get('reports/room-occupancy-report', 'ReportsController::roomOccupancyReport');
@@ -235,3 +235,4 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
 if (file_exists(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';
 }
+
