@@ -136,6 +136,25 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->put('bank-accounts/(:num)', 'BankAccountController::update/$1');
     $routes->delete('bank-accounts/(:num)', 'BankAccountController::delete/$1');
 
+    // Reports
+    $routes->get('reports', 'ReportsController::index');
+    $routes->get('reports/arrival-forecast', 'ReportsController::arrivalForecast');
+<<<<<<< ours
+<<<<<<< ours
+=======
+    $routes->get('reports/daily-arrival-report', 'ReportsController::dailyArrivalReport');
+>>>>>>> theirs
+=======
+    $routes->get('reports/daily-arrival-report', 'ReportsController::dailyArrivalReport');
+>>>>>>> theirs
+    $routes->get('reports/departure-forecast', 'ReportsController::departureForecast');
+    $routes->get('reports/inhouse-report', 'ReportsController::inhouseReport');
+    $routes->get('reports/room-occupancy-report', 'ReportsController::roomOccupancyReport');
+    $routes->get('reports/breakfast-report', 'ReportsController::breakfastReport');
+    $routes->get('reports/operator-performance', 'ReportsController::operatorPerformance');
+    $routes->get('reports/market-wise-report', 'ReportsController::marketWiseReport');
+    $routes->get('reports/revenue-report', 'ReportsController::revenueReport');
+
 
 
 });
