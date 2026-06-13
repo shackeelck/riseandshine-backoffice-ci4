@@ -115,7 +115,6 @@ class ReportsController extends BaseApiController
             ],
             'data' => $rows,
         ]);
-
     }
 
     public function departureForecast()
