@@ -7,15 +7,13 @@ class ReportsController extends BaseApiController
     protected $format = 'json';
 
     private $reports = [
-<<<<<<< ours
-<<<<<<< ours
+
         'arrival_forecast' => 'Arrival Forecast',
-=======
+
         'arrival_forecast' => 'Daily Arrival Report',
->>>>>>> theirs
-=======
+
         'arrival_forecast' => 'Daily Arrival Report',
->>>>>>> theirs
+
         'departure_forecast' => 'Departure Forecast',
         'inhouse_report' => 'Inhouse Report',
         'room_occupancy_report' => 'Room Occupancy Report',
@@ -44,12 +42,9 @@ class ReportsController extends BaseApiController
 
     public function arrivalForecast()
     {
-<<<<<<< ours
-<<<<<<< ours
-        return $this->reportResponse('arrival_forecast');
-=======
-=======
->>>>>>> theirs
+
+        
+
         return $this->dailyArrivalReport();
     }
 
@@ -125,10 +120,7 @@ class ReportsController extends BaseApiController
             ],
             'data' => $rows,
         ]);
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
+
     }
 
     public function departureForecast()
@@ -233,30 +225,26 @@ class ReportsController extends BaseApiController
         ];
     }
 
-<<<<<<< ours
-<<<<<<< ours
-=======
-=======
->>>>>>> theirs
+
     private function getArrivalFilters()
     {
-        $arrivalFilter = trim((string) ($this->request->getGet('filter') ?? 'arrival_today'));
+        $arrivalFilter = trim((string) ($this->request->getGet('filter') ?? 'today'));
         $today = date('Y-m-d');
         $tomorrow = date('Y-m-d', strtotime('+1 day'));
 
         switch ($arrivalFilter) {
-            case 'arrival_today':
+            case 'today':
                 $from = $today;
                 $to = $today;
                 break;
 
-            case 'arrival_tomorrow':
+            case 'tomorrow':
                 $from = $tomorrow;
                 $to = $tomorrow;
                 break;
 
+           
             case 'custom':
-            case 'custom_date_range':
                 $from = trim((string) ($this->request->getGet('from') ?? ''));
                 $to = trim((string) ($this->request->getGet('to') ?? ''));
 
@@ -316,10 +304,7 @@ class ReportsController extends BaseApiController
         return $total;
     }
 
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
+
     private function isValidDate($date)
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {

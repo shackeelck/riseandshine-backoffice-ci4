@@ -139,14 +139,6 @@ $routes->group('api', ['namespace' => 'App\Controllers'], function($routes) {
     // Reports
     $routes->get('reports', 'ReportsController::index');
     $routes->get('reports/arrival-forecast', 'ReportsController::arrivalForecast');
-<<<<<<< ours
-<<<<<<< ours
-=======
-    $routes->get('reports/daily-arrival-report', 'ReportsController::dailyArrivalReport');
->>>>>>> theirs
-=======
-    $routes->get('reports/daily-arrival-report', 'ReportsController::dailyArrivalReport');
->>>>>>> theirs
     $routes->get('reports/departure-forecast', 'ReportsController::departureForecast');
     $routes->get('reports/inhouse-report', 'ReportsController::inhouseReport');
     $routes->get('reports/room-occupancy-report', 'ReportsController::roomOccupancyReport');
