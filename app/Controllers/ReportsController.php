@@ -9,11 +9,6 @@ class ReportsController extends BaseApiController
     private $reports = [
 
         'arrival_forecast' => 'Arrival Forecast',
-
-        'arrival_forecast' => 'Daily Arrival Report',
-
-        'arrival_forecast' => 'Daily Arrival Report',
-
         'departure_forecast' => 'Departure Forecast',
         'inhouse_report' => 'Inhouse Report',
         'room_occupancy_report' => 'Room Occupancy Report',
@@ -42,8 +37,6 @@ class ReportsController extends BaseApiController
 
     public function arrivalForecast()
     {
-
-        
 
         return $this->dailyArrivalReport();
     }
@@ -80,6 +73,7 @@ class ReportsController extends BaseApiController
                 b.guests AS number_of_guests,
                 b.check_in AS check_in_date,
                 DATEDIFF(b.check_out, b.check_in) AS number_of_nights,
+                b.arrival_flight,
                 b.special_request AS remarks
             ", false)
             ->join('customers', 'customers.id = b.customer_id', 'left')
@@ -112,6 +106,7 @@ class ReportsController extends BaseApiController
                 'number_of_guests',
                 'check_in_date',
                 'number_of_nights',
+                'arrival_flight',
                 'remarks',
             ],
             'summary' => [
@@ -225,26 +220,31 @@ class ReportsController extends BaseApiController
         ];
     }
 
-
+   
     private function getArrivalFilters()
     {
         $arrivalFilter = trim((string) ($this->request->getGet('filter') ?? 'today'));
+
         $today = date('Y-m-d');
         $tomorrow = date('Y-m-d', strtotime('+1 day'));
 
         switch ($arrivalFilter) {
             case 'today':
+
+
                 $from = $today;
                 $to = $today;
                 break;
 
             case 'tomorrow':
+
                 $from = $tomorrow;
                 $to = $tomorrow;
                 break;
 
            
             case 'custom':
+
                 $from = trim((string) ($this->request->getGet('from') ?? ''));
                 $to = trim((string) ($this->request->getGet('to') ?? ''));
 
