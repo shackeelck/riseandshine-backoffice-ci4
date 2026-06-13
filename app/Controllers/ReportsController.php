@@ -120,7 +120,80 @@ class ReportsController extends BaseApiController
 
     public function departureForecast()
     {
-        return $this->reportResponse('departure_forecast');
+        return $this->dailyDepartureReport();
+    }
+
+    public function dailyDepartureReport()
+    {
+        $filters = $this->getDepartureFilters();
+
+        if (!$filters['is_valid']) {
+            return $this->failValidationError($filters['error']);
+        }
+
+        $db = db_connect();
+
+        $primaryGuestSub = "(SELECT bg.name
+            FROM booking_guests bg
+            WHERE bg.booking_id = b.id AND bg.is_primary = 1
+            LIMIT 1)";
+
+        $outstandingBalanceSub = "(SELECT COALESCE(p.total, 0) - COALESCE(p.paid_amount, 0)
+            FROM proforma_bookings pb
+            LEFT JOIN proformas p ON p.id = pb.proforma_id
+            WHERE pb.booking_id = b.id
+            ORDER BY pb.id DESC
+            LIMIT 1)";
+
+        $builder = $db->table('bookings b')
+            ->select("
+                b.reference AS booking_number,
+                {$primaryGuestSub} AS guest_name,
+                room_inventory.room_number,
+                customers.name AS operator,
+                b.guests AS number_of_guests,
+                b.check_out AS check_out_date,
+                COALESCE({$outstandingBalanceSub}, 0) AS outstanding_balance,
+                b.arrival_flight,
+                b.special_request AS remarks
+            ", false)
+            ->join('customers', 'customers.id = b.customer_id', 'left')
+            ->join('room_inventory', 'room_inventory.id = b.room_inventory_id', 'left')
+            ->where('b.check_out >=', $filters['from'])
+            ->where('b.check_out <=', $filters['to'])
+            ->where('b.status !=', 'cancelled')
+            ->orderBy('b.check_out', 'ASC')
+            ->orderBy('room_inventory.room_number', 'ASC')
+            ->orderBy('b.reference', 'ASC');
+
+        $rows = $builder->get()->getResultArray();
+
+        return $this->respond([
+            'report_key' => 'departure_forecast',
+            'report_name' => $this->reports['departure_forecast'],
+            'filters' => [
+                'departure_filter' => $filters['departure_filter'],
+                'from' => $filters['from'],
+                'to' => $filters['to'],
+            ],
+            'columns' => [
+                'booking_number',
+                'guest_name',
+                'room_number',
+                'operator',
+                'number_of_guests',
+                'check_out_date',
+                'outstanding_balance',
+                'arrival_flight',
+                'remarks',
+            ],
+            'summary' => [
+                'total_departures' => count($rows),
+                'total_guests' => $this->sumColumn($rows, 'number_of_guests'),
+                'total_outstanding_balance' => $this->sumDecimalColumn($rows, 'outstanding_balance'),
+            ],
+            'data' => $rows,
+        ]);
     }
 
     public function inhouseReport()
@@ -293,6 +366,76 @@ class ReportsController extends BaseApiController
         ];
     }
 
+    private function getDepartureFilters()
+    {
+        $departureFilter = trim((string) ($this->request->getGet('filter') ?? 'departure_today'));
+
+        $today = date('Y-m-d');
+        $tomorrow = date('Y-m-d', strtotime('+1 day'));
+
+        switch ($departureFilter) {
+            case 'departure_today':
+            case 'today':
+                $from = $today;
+                $to = $today;
+                break;
+
+            case 'departure_tomorrow':
+            case 'tomorrow':
+                $from = $tomorrow;
+                $to = $tomorrow;
+                break;
+
+            case 'custom_date_range':
+            case 'custom':
+                $from = trim((string) ($this->request->getGet('from') ?? ''));
+                $to = trim((string) ($this->request->getGet('to') ?? ''));
+
+                if ($from === '' || $to === '') {
+                    return [
+                        'is_valid' => false,
+                        'error' => 'from and to are required for custom departure date range.',
+                    ];
+                }
+                break;
+
+            default:
+                return [
+                    'is_valid' => false,
+                    'error' => 'filter must be departure_today, departure_tomorrow, custom_date_range, today, tomorrow, or custom.',
+                ];
+        }
+
+        if (!$this->isValidDate($from)) {
+            return [
+                'is_valid' => false,
+                'error' => 'from must be a valid date in YYYY-MM-DD format.',
+            ];
+        }
+
+        if (!$this->isValidDate($to)) {
+            return [
+                'is_valid' => false,
+                'error' => 'to must be a valid date in YYYY-MM-DD format.',
+            ];
+        }
+
+        if (strtotime($to) < strtotime($from)) {
+            return [
+                'is_valid' => false,
+                'error' => 'to must be greater than or equal to from.',
+            ];
+        }
+
+        return [
+            'is_valid' => true,
+            'error' => null,
+            'departure_filter' => $departureFilter,
+            'from' => $from,
+            'to' => $to,
+        ];
+    }
+
     private function sumColumn($rows, $column)
     {
         $total = 0;
@@ -302,6 +445,17 @@ class ReportsController extends BaseApiController
         }
 
         return $total;
+    }
+
+    private function sumDecimalColumn($rows, $column)
+    {
+        $total = 0.0;
+
+        foreach ($rows as $row) {
+            $total += (float) ($row[$column] ?? 0);
+        }
+
+        return round($total, 2);
     }
 
 
